@@ -50,18 +50,32 @@ void setupWindow() {
 class Counter with ChangeNotifier {
   int value = 0;
   void increment() {
+    if (value >= 100) {
+      return;
+    }
+
     value += 1;
     notifyListeners();
   }
   
   void decrement() {
+    if (value <= 0) {
+      return;
+    }
     value -= 1;
+    notifyListeners();
+  }
+
+  void setValue(int newValue) {
+    value = newValue;
     notifyListeners();
   }
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  // String milestoneMessage = 'You\'re a child';
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -72,12 +86,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Age counter')),
+      appBar: AppBar(title: const Text('Age counter'), backgroundColor: Colors.blue,),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -88,13 +105,83 @@ class MyHomePage extends StatelessWidget {
             // rebuilds if the model is updated.
             Consumer<Counter>(
               builder:
-                  (context, counter, child) => Text(
-                    'I am ${counter.value} years old.',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                  (context, counter, child){
+                  String milestoneMessage = '';
+                  Color backgroundColor = Colors.white;
+
+                  if (counter.value < 13) {
+                    milestoneMessage = 'You\'re a child!';
+                    backgroundColor = Colors.lightBlue;
+                  } else if (counter.value < 20) {
+                    milestoneMessage = 'Teenager time!';
+                    backgroundColor = Colors.lightGreen;
+                  } else if (counter.value < 31) {
+                    milestoneMessage = 'You\'re a young adult!';
+                    backgroundColor = Colors.yellow;
+                  } else if (counter.value < 51) {
+                    milestoneMessage = 'You\'re an adult now!';
+                    backgroundColor = Colors.orange;
+                  } else {
+                    milestoneMessage = 'Golden years!';
+                    backgroundColor = Colors.grey;
+                  };
+
+                  return Container(
+                  // width: double.infinity,  // Ensures full width
+                  // padding: EdgeInsets.all(16),  // Adds spacing inside the container
+                  color: backgroundColor,
+                  child: Column(
+                    children: [
+                      Text(
+                        'I am ${counter.value} years old.',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      Text(
+                        milestoneMessage,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
+                );
+              },
             ),
             ElevatedButton(onPressed: () {context.read<Counter>().increment();}, child: Text('Increase Age')),
             ElevatedButton(onPressed: () {context.read<Counter>().decrement();}, child: Text('Decrease Age')),
+            Consumer<Counter>(
+              builder: (context, counter, child) {
+                return Slider(
+                  value: counter.value.toDouble(),
+                  min: 0,
+                  max: 100,
+                  onChanged: (newValue) {
+                    counter.setValue(newValue.toInt());
+                  },
+                );
+              },
+            ),
+            Consumer<Counter>(
+              builder: (context, counter, child) {
+                double progress = (counter.value ~/ 33) / 3;
+                Color barColor;
+
+                if (progress < 0.34) {
+                  barColor = Colors.green;
+                } else if (progress < 0.67) {
+                  barColor = Colors.yellow;
+                } else {
+                  barColor = Colors.red;
+                }
+
+                return LinearProgressIndicator(
+                  value: progress, 
+                  backgroundColor: Colors.grey,
+                  color: barColor,
+                );
+              },
+            ),
           ],
         ),
       ),
